@@ -131,3 +131,118 @@ items.forEach(status);
 Вторая монета: left: 15, top: 5, right: 16, bottom: 6
 Игрок подобрал Вторая монета
 */
+
+class Level {
+  constructor(grid = [], actors = []) {
+    this.grid = grid;
+    this.actors = actors;
+    this.player = this.actors.find(actor => {
+      actor.type === 'player';
+    });
+    this.height = this.grid.length;
+    this.width = () => {
+      let maxCeils = 0;
+      for (row of grid) {
+        if (row.length > maxCeils) maxCeils = row.length;
+      }
+      return maxCeils;
+    };
+    this.status = null;
+    this.finishDelay = 1;
+  }
+
+  isFinished() {
+    return status !== null && finishDelay < 0;
+  }
+
+  actorAt(actor) {
+    if (!(actor instanceof Actor) || !arguments.length)
+      throw `должен быть объект типа Vector`;
+    for (let actorItem of this.actors) {
+      if (actorItem.isIntersect(actor)) return actorItem;
+    }
+    return undefined;
+  }
+
+  obstacleAt(pos, size) {
+    if (
+      !(pos instanceof Vector) ||
+      !(size instanceof Vector) ||
+      !arguments.length
+    )
+      throw `аргументы должен быть объектами типа Vector`;
+    if (pos.y + size.y > this.height) return 'lava';
+    if (pos.x + size.x > this.width || pos.x < 0 || size.x < 0) return 'wall';
+    for (let row of grid)
+      for (let ceil of row) {
+        if (ceil) return ceil;
+      }
+    //return undefined;
+  }
+
+  removeActor(actor) {
+    const index = this.actors.indexOf(actor);
+    if (index != -1) this.actors.splice(index, 1);
+  }
+
+  noMoreActors(typeActor) {
+    for (let actor of this.actors) {
+      if (actor.type === typeActor) return false;
+    }
+    return true;
+  }
+
+  playerTouched(typeObject, actor) {
+    if (this.status !== null) return;
+    if (typeObject === 'lava' || typeObject === 'fireball') {
+      this.status = 'lost';
+    }
+    if (typeObject === 'coin') {
+      this.removeActor(actor);
+      if (this.noMoreActors(typeObject)) this.status = 'won';
+    }
+  }
+}
+//Проверка
+/*
+const grid = [[undefined, undefined], ['wall', 'wall']];
+
+function MyCoin(title) {
+  this.type = 'coin';
+  this.title = title;
+}
+MyCoin.prototype = Object.create(Actor);
+MyCoin.constructor = MyCoin;
+
+const goldCoin = new MyCoin('Золото');
+const bronzeCoin = new MyCoin('Бронза');
+const player = new Actor();
+const fireball = new Actor();
+
+const level = new Level(grid, [goldCoin, bronzeCoin, player, fireball]);
+
+level.playerTouched('coin', goldCoin);
+level.playerTouched('coin', bronzeCoin);
+
+if (level.noMoreActors('coin')) {
+  console.log('Все монеты собраны');
+  console.log(`Статус игры: ${level.status}`);
+}
+
+const obstacle = level.obstacleAt(new Vector(1, 1), player.size);
+if (obstacle) {
+  console.log(`На пути препятствие: ${obstacle}`);
+}
+
+const otherActor = level.actorAt(player);
+if (otherActor === fireball) {
+  console.log('Пользователь столкнулся с шаровой молнией');
+}
+*/
+//Результат проверки
+/*
+Все монеты собраны
+Статус игры: won
+На пути препятствие: wall
+Пользователь столкнулся с шаровой молнией
+ */
