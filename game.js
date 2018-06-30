@@ -75,18 +75,12 @@ class Actor {
     if (!(actor instanceof Actor) || !arguments.length)
       throw `должен быть объект типа Vector`;
     if (actor === this) return false;
-    //по y:
     if (
-      (this.top <= actor.top && this.bottom > actor.top) ||
-      (this.top >= actor.top && this.top < actor.bottom)
+      actor.top <= this.bottom &&
+      this.top <= actor.bottom &&
+      (actor.left <= this.right && this.left <= actor.right)
     ) {
-      //пересекаются по y, проверяем по x:
-      if (
-        (this.left <= actor.left && this.right > actor.left) ||
-        (this.left >= actor.left && this.left < actor.right)
-      ) {
-        return true;
-      }
+      return true;
     }
     return false;
   }
