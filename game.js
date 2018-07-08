@@ -6,7 +6,7 @@ class Vector {
   }
   plus(vector) {
     if (!(vector instanceof Vector)) {
-      throw `Можно прибавлять к вектору только вектор типа Vector`;
+      throw Error(`Можно прибавлять к вектору только вектор типа Vector`);
     }
     return new Vector(this.x + vector.x, this.y + vector.y);
   }
@@ -17,7 +17,7 @@ class Vector {
 
 //Проверка class Vector
 /*
-const start = new Vector(30, 50);
+const start = new Vector(30, 50;)
 const moveTo = new Vector(5, 10);
 const finish = start.plus(moveTo.times(2));
 
@@ -36,17 +36,15 @@ class Actor {
     size = new Vector(1, 1),
     speed = new Vector(0, 0)
   ) {
-    if (!(pos instanceof Vector)) {
-      throw `расположение должно быть типа Vector`;
+    if (
+      !(pos instanceof Vector) ||
+      !(size instanceof Vector) ||
+      !(speed instanceof Vector)
+    ) {
+      throw Error(`параметры должны быть типа Vector`);
     }
     this.pos = pos;
-    if (!(size instanceof Vector)) {
-      throw `размер должен быть типа Vector`;
-    }
     this.size = size;
-    if (!(speed instanceof Vector)) {
-      throw `скорость должна быть типа Vector`;
-    }
     this.speed = speed;
   }
   get top() {
@@ -62,23 +60,18 @@ class Actor {
     return this.top + this.size.y;
   }
   get type() {
-    const actorProp = [];
-    actorProp.push(this.left);
-    actorProp.push(this.top);
-    actorProp.push(this.right);
-    actorProp.push(this.bottom);
-    return actorProp.join(', ');
+    return 'actor';
   }
   act() {}
 
   isIntersect(actor) {
     if (!(actor instanceof Actor) || !arguments.length)
-      throw `должен быть объект типа Vector`;
+      throw Error(`должен быть объект типа Vector`);
     if (actor === this) return false;
     if (
-      actor.top <= this.bottom &&
-      this.top <= actor.bottom &&
-      (actor.left <= this.right && this.left <= actor.right)
+      actor.top < this.bottom &&
+      this.top < actor.bottom &&
+      (actor.left < this.right && this.left < actor.right)
     ) {
       return true;
     }
@@ -136,28 +129,28 @@ class Level {
   constructor(grid = [], actors = []) {
     this.grid = grid;
     this.actors = actors;
-    this.player = this.actors.find(actor => {
-      actor.type === 'player';
-    });
     this.height = this.grid.length;
-    this.width = () => {
-      let maxCeils = 0;
-      for (row of grid) {
-        if (row.length > maxCeils) maxCeils = row.length;
-      }
-      return maxCeils;
-    };
     this.status = null;
     this.finishDelay = 1;
   }
+  get player() {
+    return this.actors.find(actor => actor.type === 'player');
+  }
+  get width() {
+    const maxCeils = this.grid.reduce((maxCeils, row) => {
+      if (row.length > maxCeils) maxCeils = row.length;
+      return maxCeils;
+    }, 0);
+    return maxCeils;
+  }
 
   isFinished() {
-    return status !== null && finishDelay < 0;
+    return this.status !== null && this.finishDelay < 0;
   }
 
   actorAt(actor) {
     if (!(actor instanceof Actor) || !arguments.length)
-      throw `должен быть объект типа Vector`;
+      throw Error(`должен быть объект типа Vector`);
     for (let actorItem of this.actors) {
       if (actorItem.isIntersect(actor)) return actorItem;
     }
@@ -170,14 +163,19 @@ class Level {
       !(size instanceof Vector) ||
       !arguments.length
     )
-      throw `аргументы должен быть объектами типа Vector`;
-    if (pos.y + size.y > this.height) return 'lava';
-    if (pos.x + size.x > this.width || pos.x < 0 || size.x < 0) return 'wall';
-    for (let row of grid)
-      for (let ceil of row) {
-        if (ceil) return ceil;
+      throw Error(`аргументы должен быть объектами типа Vector`);
+    const left = Math.floor(pos.x),
+      right = Math.ceil(pos.x + size.x),
+      top = Math.floor(pos.y),
+      bottom = Math.ceil(pos.y + size.y);
+
+    if (bottom > this.height) return 'lava';
+    if (right > this.width || left < 0 || top < 0) return 'wall';
+    for (let i = top; i < bottom; i++) {
+      for (let j = left; j < right; j++) {
+        if (this.grid[i][j]) return this.grid[i][j];
       }
-    //return undefined;
+    }
   }
 
   removeActor(actor) {
