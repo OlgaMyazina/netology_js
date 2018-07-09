@@ -375,3 +375,12 @@ class Player extends Actor {
     return 'player';
   }
 }
+const symbolDict = {
+  x: 'wall',
+  '!': 'lava',
+  '@': Player,
+  o: Coin,
+  '=': HorizontalFireball,
+  '|': VerticalFireball,
+  v: FireRain
+};
