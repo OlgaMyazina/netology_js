@@ -244,3 +244,47 @@ if (otherActor === fireball) {
 На пути препятствие: wall
 Пользователь столкнулся с шаровой молнией
  */
+
+class LevelParser {
+  constructor(dictionary) {
+    this.dict = dictionary;
+  }
+
+  actorFromSymbol(symbol) {
+    if (!symbol || !this.dict) return undefined;
+    return this.dict[symbol];
+  }
+
+  obstacleFromSymbol(symbol) {
+    switch (symbol) {
+      case 'x':
+        return 'wall';
+      case '!':
+        return 'lava';
+      default:
+        return undefined;
+    }
+  }
+  createGrid(plan) {
+    return plan.map(str => {
+      return [...str].map(char => this.obstacleFromSymbol(char));
+    });
+  }
+
+  createActors(plan) {
+    const planActors = [];
+    for (let i = 0; i < plan.length; i++) {
+      for (let j = 0; j < plan[i].length; j++) {
+        const actorObject = this.actorFromSymbol(plan[i][j]);
+        if (actorObject && typeof actorObject === 'function') {
+          const actor = new actorObject(new Vector(j, i));
+          if (actor instanceof Actor) planActors.push(actor);
+        }
+      }
+    }
+    return planActors;
+  }
+  parse(plan) {
+    return new Level(this.createGrid(plan), this.createActors(plan));
+  }
+}
