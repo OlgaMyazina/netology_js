@@ -312,3 +312,27 @@ class Fireball extends Actor {
     else this.pos = nextPosition;
   }
 }
+class HorizontalFireball extends Fireball {
+  constructor(pos) {
+    const speed = new Vector(2, 0);
+    super(pos, speed);
+  }
+}
+
+class VerticalFireball extends Fireball {
+  constructor(pos) {
+    const speed = new Vector(0, 2);
+    super(pos, speed);
+  }
+}
+
+class FireRain extends Fireball {
+  constructor(pos) {
+    const speed = new Vector(0, 3);
+    super(pos, speed);
+    this.nextPos = pos;
+  }
+  handleObstacle() {
+    this.pos = this.nextPos;
+  }
+}
