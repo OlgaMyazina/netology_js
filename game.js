@@ -384,3 +384,34 @@ const symbolDict = {
   '|': VerticalFireball,
   v: FireRain
 };
+
+const schemas = [
+  [
+    '         ',
+    '         ',
+    '    =    ',
+    '       o ',
+    '     !xxx',
+    ' @       ',
+    'xxx!     ',
+    '         '
+  ],
+  [
+    '      v  ',
+    '    v    ',
+    '  v      ',
+    '        o',
+    '        x',
+    '@   x    ',
+    'x        ',
+    '         '
+  ]
+];
+const actorDict = {
+  '@': Player,
+  v: FireRain
+};
+const parser = new LevelParser(symbolDict);
+runGame(schemas, parser, DOMDisplay).then(() =>
+  console.log('Вы выиграли приз!')
+);
