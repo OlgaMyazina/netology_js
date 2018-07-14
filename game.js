@@ -4,43 +4,20 @@ class Vector {
     this.x = x;
     this.y = y;
   }
+
   plus(vector) {
-    if (!(vector instanceof Vector)) {
-      throw Error(`Можно прибавлять к вектору только вектор типа Vector`);
-    }
+    if (!(vector instanceof Vector)) throw Error(`Можно прибавлять к вектору только вектор типа Vector`);
     return new Vector(this.x + vector.x, this.y + vector.y);
   }
+
   times(nth) {
     return new Vector(this.x * nth, this.y * nth);
   }
 }
 
-//Проверка class Vector
-/*
-const start = new Vector(30, 50;)
-const moveTo = new Vector(5, 10);
-const finish = start.plus(moveTo.times(2));
-
-console.log(`Исходное расположение: ${start.x}:${start.y}`);
-console.log(`Текущее расположение: ${finish.x}:${finish.y}`);
-*/
-//Результат
-/*
-Исходное расположение: 30:50
-Текущее расположение: 40:70
- */
-
 class Actor {
-  constructor(
-    pos = new Vector(0, 0),
-    size = new Vector(1, 1),
-    speed = new Vector(0, 0)
-  ) {
-    if (
-      !(pos instanceof Vector) ||
-      !(size instanceof Vector) ||
-      !(speed instanceof Vector)
-    ) {
+  constructor(pos = new Vector(0, 0), size = new Vector(1, 1), speed = new Vector(0, 0)) {
+    if (!(pos instanceof Vector) || !(size instanceof Vector) || !(speed instanceof Vector)) {
       throw Error(`параметры должны быть типа Vector`);
     }
     this.pos = pos;
@@ -62,68 +39,20 @@ class Actor {
   get type() {
     return 'actor';
   }
+
   act() {}
 
   isIntersect(actor) {
-    if (!(actor instanceof Actor) || !arguments.length)
-      throw Error(`должен быть объект типа Vector`);
-    if (actor === this) return false;
+    if (!(actor instanceof Actor)) throw Error(`должен быть объект типа Vector`);
     if (
-      actor.top < this.bottom &&
-      this.top < actor.bottom &&
-      (actor.left < this.right && this.left < actor.right)
+      actor !== this &&
+      (actor.top < this.bottom && this.top < actor.bottom && (actor.left < this.right && this.left < actor.right))
     ) {
       return true;
     }
     return false;
   }
 }
-
-//Проверка кода
-/*
-const items = new Map();
-const player = new Actor();
-items.set('Игрок', player);
-items.set('Первая монета', new Actor(new Vector(10, 10)));
-items.set('Вторая монета', new Actor(new Vector(15, 5)));
-
-function position(item) {
-  return ['left', 'top', 'right', 'bottom']
-    .map(side => `${side}: ${item[side]}`)
-    .join(', ');
-}
-
-function movePlayer(x, y) {
-  player.pos = player.pos.plus(new Vector(x, y));
-}
-
-function status(item, title) {
-  console.log(`${title}: ${position(item)}`);
-  if (player.isIntersect(item)) {
-    console.log(`Игрок подобрал ${title}`);
-  }
-}
-
-items.forEach(status);
-movePlayer(10, 10);
-items.forEach(status);
-movePlayer(5, -5);
-items.forEach(status);
-*/
-//Результат
-/*
-Игрок: left: 0, top: 0, right: 1, bottom: 1
-Первая монета: left: 10, top: 10, right: 11, bottom: 11
-Вторая монета: left: 15, top: 5, right: 16, bottom: 6
-Игрок: left: 10, top: 10, right: 11, bottom: 11
-Первая монета: left: 10, top: 10, right: 11, bottom: 11
-Игрок подобрал Первая монета
-Вторая монета: left: 15, top: 5, right: 16, bottom: 6
-Игрок: left: 15, top: 5, right: 16, bottom: 6
-Первая монета: left: 10, top: 10, right: 11, bottom: 11
-Вторая монета: left: 15, top: 5, right: 16, bottom: 6
-Игрок подобрал Вторая монета
-*/
 
 class Level {
   constructor(grid = [], actors = []) {
@@ -132,11 +61,11 @@ class Level {
     this.height = this.grid.length;
     this.status = null;
     this.finishDelay = 1;
+    this.player = this.actors.find(actor => actor.type === 'player');
+    this.width = this.widthGrid();
   }
-  get player() {
-    return this.actors.find(actor => actor.type === 'player');
-  }
-  get width() {
+
+  widthGrid() {
     const maxCeils = this.grid.reduce((maxCeils, row) => {
       if (row.length > maxCeils) maxCeils = row.length;
       return maxCeils;
@@ -144,31 +73,26 @@ class Level {
     return maxCeils;
   }
 
+  border(pos, size) {
+    return [Math.floor(pos.y), Math.ceil(pos.x + size.x), Math.ceil(pos.y + size.y), Math.floor(pos.x)];
+  }
+
   isFinished() {
     return this.status !== null && this.finishDelay < 0;
   }
 
   actorAt(actor) {
-    if (!(actor instanceof Actor) || !arguments.length)
-      throw Error(`должен быть объект типа Vector`);
+    if (!(actor instanceof Actor)) throw Error(`должен быть объект типа Vector`);
     for (let actorItem of this.actors) {
       if (actorItem.isIntersect(actor)) return actorItem;
     }
-    return undefined;
   }
 
   obstacleAt(pos, size) {
-    if (
-      !(pos instanceof Vector) ||
-      !(size instanceof Vector) ||
-      !arguments.length
-    )
+    if (!(pos instanceof Vector) || !(size instanceof Vector)) {
       throw Error(`аргументы должен быть объектами типа Vector`);
-    const left = Math.floor(pos.x),
-      right = Math.ceil(pos.x + size.x),
-      top = Math.floor(pos.y),
-      bottom = Math.ceil(pos.y + size.y);
-
+    }
+    const [top, right, bottom, left] = this.border(pos, size);
     if (bottom > this.height) return 'lava';
     if (right > this.width || left < 0 || top < 0) return 'wall';
     for (let i = top; i < bottom; i++) {
@@ -191,59 +115,15 @@ class Level {
   }
 
   playerTouched(typeObject, actor) {
-    if (this.status !== null) return;
-    if (typeObject === 'lava' || typeObject === 'fireball') {
-      this.status = 'lost';
-    }
-    if (typeObject === 'coin') {
-      this.removeActor(actor);
-      if (this.noMoreActors(typeObject)) this.status = 'won';
+    if (this.status == null) {
+      if (typeObject === 'lava' || typeObject === 'fireball') this.status = 'lost';
+      if (typeObject === 'coin') {
+        this.removeActor(actor);
+        if (this.noMoreActors(typeObject)) this.status = 'won';
+      }
     }
   }
 }
-//Проверка
-/*
-const grid = [[undefined, undefined], ['wall', 'wall']];
-
-function MyCoin(title) {
-  this.type = 'coin';
-  this.title = title;
-}
-MyCoin.prototype = Object.create(Actor);
-MyCoin.constructor = MyCoin;
-
-const goldCoin = new MyCoin('Золото');
-const bronzeCoin = new MyCoin('Бронза');
-const player = new Actor();
-const fireball = new Actor();
-
-const level = new Level(grid, [goldCoin, bronzeCoin, player, fireball]);
-
-level.playerTouched('coin', goldCoin);
-level.playerTouched('coin', bronzeCoin);
-
-if (level.noMoreActors('coin')) {
-  console.log('Все монеты собраны');
-  console.log(`Статус игры: ${level.status}`);
-}
-
-const obstacle = level.obstacleAt(new Vector(1, 1), player.size);
-if (obstacle) {
-  console.log(`На пути препятствие: ${obstacle}`);
-}
-
-const otherActor = level.actorAt(player);
-if (otherActor === fireball) {
-  console.log('Пользователь столкнулся с шаровой молнией');
-}
-*/
-//Результат проверки
-/*
-Все монеты собраны
-Статус игры: won
-На пути препятствие: wall
-Пользователь столкнулся с шаровой молнией
- */
 
 class LevelParser {
   constructor(dictionary) {
@@ -251,8 +131,7 @@ class LevelParser {
   }
 
   actorFromSymbol(symbol) {
-    if (!symbol || !this.dict) return undefined;
-    return this.dict[symbol];
+    if (symbol && this.dict) return this.dict[symbol];
   }
 
   obstacleFromSymbol(symbol) {
@@ -261,10 +140,9 @@ class LevelParser {
         return 'wall';
       case '!':
         return 'lava';
-      default:
-        return undefined;
     }
   }
+
   createGrid(plan) {
     return plan.map(str => {
       return [...str].map(char => this.obstacleFromSymbol(char));
@@ -284,10 +162,12 @@ class LevelParser {
     }
     return planActors;
   }
+
   parse(plan) {
     return new Level(this.createGrid(plan), this.createActors(plan));
   }
 }
+
 class Fireball extends Actor {
   constructor(pos = new Vector(0, 0), speed = new Vector(0, 0)) {
     const size = new Vector(1, 1);
@@ -298,20 +178,20 @@ class Fireball extends Actor {
   }
 
   getNextPosition(time = 1) {
-    return new Vector(
-      this.pos.x + this.speed.x * time,
-      this.pos.y + this.speed.y * time
-    );
+    return this.pos.plus(this.speed.times(time));
   }
+
   handleObstacle() {
     this.speed = this.speed.times(-1);
   }
+
   act(time, grid) {
     const nextPosition = this.getNextPosition(time);
     if (grid.obstacleAt(nextPosition, this.size)) this.handleObstacle();
     else this.pos = nextPosition;
   }
 }
+
 class HorizontalFireball extends Fireball {
   constructor(pos) {
     const speed = new Vector(2, 0);
@@ -332,16 +212,16 @@ class FireRain extends Fireball {
     super(pos, speed);
     this.nextPos = pos;
   }
+
   handleObstacle() {
     this.pos = this.nextPos;
   }
 }
+
 class Coin extends Actor {
   constructor(pos = new Vector(0, 0)) {
     const newPosition = pos.plus(new Vector(0.2, 0.1));
-
     const size = new Vector(0.6, 0.6);
-
     super(newPosition, size);
     this.newPos = newPosition;
     this.springSpeed = 8;
@@ -351,9 +231,11 @@ class Coin extends Actor {
   get type() {
     return 'coin';
   }
+
   updateSpring(time = 1) {
     this.spring += this.springSpeed * time;
   }
+
   getSpringVector() {
     return new Vector(0, Math.sin(this.spring) * this.springDist);
   }
@@ -365,6 +247,7 @@ class Coin extends Actor {
     this.pos = this.getNextPosition(time);
   }
 }
+
 class Player extends Actor {
   constructor(pos = new Vector(0, 0)) {
     const newPos = pos.plus(new Vector(0, -0.5));
@@ -375,6 +258,7 @@ class Player extends Actor {
     return 'player';
   }
 }
+
 const symbolDict = {
   x: 'wall',
   '!': 'lava',
@@ -386,32 +270,12 @@ const symbolDict = {
 };
 
 const schemas = [
-  [
-    '         ',
-    '         ',
-    '    =    ',
-    '       o ',
-    '     !xxx',
-    ' @       ',
-    'xxx!     ',
-    '         '
-  ],
-  [
-    '      v  ',
-    '    v    ',
-    '  v      ',
-    '        o',
-    '        x',
-    '@   x    ',
-    'x        ',
-    '         '
-  ]
+  ['         ', '         ', '    =    ', '       o ', '     !xxx', ' @       ', 'xxx!     ', '         '],
+  ['      v  ', '    v    ', '  v      ', '        o', '        x', '@   x    ', 'x        ', '         ']
 ];
 const actorDict = {
   '@': Player,
   v: FireRain
 };
 const parser = new LevelParser(symbolDict);
-runGame(schemas, parser, DOMDisplay).then(() =>
-  console.log('Вы выиграли приз!')
-);
+runGame(schemas, parser, DOMDisplay).then(() => console.log('Вы выиграли приз!'));
