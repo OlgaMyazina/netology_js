@@ -44,13 +44,10 @@ class Actor {
 
   isIntersect(actor) {
     if (!(actor instanceof Actor)) throw Error(`должен быть объект типа Vector`);
-    if (
+    return (
       actor !== this &&
       (actor.top < this.bottom && this.top < actor.bottom && (actor.left < this.right && this.left < actor.right))
-    ) {
-      return true;
-    }
-    return false;
+    );
   }
 }
 
@@ -108,10 +105,7 @@ class Level {
   }
 
   noMoreActors(typeActor) {
-    for (let actor of this.actors) {
-      if (actor.type === typeActor) return false;
-    }
-    return true;
+    return !this.actors.some(actor => actor.type === typeActor);
   }
 
   playerTouched(typeObject, actor) {
